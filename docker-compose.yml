@@ -1,0 +1,17 @@
+name: passgen
+
+services:
+  passgen:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: passgen
+    restart: unless-stopped
+    networks:
+      - default
+      - mcp-shared
+
+networks:
+  mcp-shared:
+    external: true
+    # Pre-create with: docker network create mcp-shared

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.git/
+docs/
+e2e/
+src/__tests__/
+.env*
+*.md
+.eslintrc*
+.prettierrc
+coverage/
