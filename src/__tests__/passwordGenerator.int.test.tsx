@@ -3,7 +3,10 @@
 // Test Type: Integration Tests
 // Implementation Timing: Created alongside implementation
 
-import { describe, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, vi, beforeEach, afterEach, expect } from 'vitest'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { App } from '../App'
 
 // ---------------------------------------------------------------------------
 // NOTE ON MOCK BOUNDARIES
@@ -61,7 +64,7 @@ describe('AC-01: Password generation on mount', () => {
     // (App with default state — no user interactions)
 
     // Act
-    // render(<App />)  // Uncomment when App is implemented
+    render(<App />)
 
     // Assert
     // Verification items:
@@ -71,12 +74,12 @@ describe('AC-01: Password generation on mount', () => {
     // - Password contains only characters from uppercase + lowercase + digits pool
     //   (no symbols, ambiguous chars included in pool by default)
     // - crypto.getRandomValues was called at least once
-    // const passwordField = screen.getByRole('textbox', { name: /password/i })
-    // expect(passwordField).toBeInTheDocument()
-    // const value = (passwordField as HTMLInputElement).value
-    // expect(value).toHaveLength(16)
-    // expect(value).toMatch(/^[A-Za-z0-9]+$/)
-    // expect(deterministicGetRandomValues).toHaveBeenCalled()
+    const passwordField = screen.getByRole('textbox', { name: /password/i })
+    expect(passwordField).toBeInTheDocument()
+    const value = (passwordField as HTMLInputElement).value
+    expect(value).toHaveLength(16)
+    expect(value).toMatch(/^[A-Za-z0-9]+$/)
+    expect(deterministicGetRandomValues).toHaveBeenCalled()
   })
 })
 
@@ -351,18 +354,18 @@ describe('AC-13: Strength indicator maps zxcvbn score to correct label', () => {
 describe('AC-14: Regenerate button always invokes crypto.getRandomValues', () => {
   it('clicking regenerate calls getRandomValues at least once more than before click', async () => {
     // Arrange
-    // render(<App />)
-    // const callsBefore = deterministicGetRandomValues.mock.calls.length
-    // const regenerateButton = screen.getByRole('button', { name: /regenerate|refresh/i })
+    render(<App />)
+    const callsBefore = deterministicGetRandomValues.mock.calls.length
+    const regenerateButton = screen.getByRole('button', { name: /regenerate|refresh/i })
 
     // Act
-    // await userEvent.click(regenerateButton)
+    await userEvent.click(regenerateButton)
 
     // Assert
     // Verification items:
     // - getRandomValues call count increased after click (new generation occurred)
     // - No equality check / retry guard skipped the call
-    // expect(deterministicGetRandomValues.mock.calls.length).toBeGreaterThan(callsBefore)
+    expect(deterministicGetRandomValues.mock.calls.length).toBeGreaterThan(callsBefore)
   })
 })
 
@@ -384,56 +387,57 @@ describe('AC-14: Regenerate button always invokes crypto.getRandomValues', () =>
 describe('AC-15/16: Copy button feedback states', () => {
   it('successful clipboard write shows Copied confirmation and reverts after 1 000 ms', async () => {
     // Arrange
-    // vi.useFakeTimers()
-    // Object.defineProperty(navigator, 'clipboard', {
-    //   value: { writeText: vi.fn().mockResolvedValue(undefined) },
-    //   writable: true, configurable: true,
-    // })
-    // render(<App />)
-    // const copyButton = screen.getByRole('button', { name: /copy/i })
+    const clipboardWriteText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: clipboardWriteText },
+      writable: true, configurable: true,
+    })
+    render(<App />)
+    const copyButton = screen.getByRole('button', { name: /copy/i })
 
     // Act
-    // await userEvent.click(copyButton)
+    fireEvent.click(copyButton)
 
     // Assert — confirmation visible immediately after click
     // Verification items:
     // - Button shows "Copied!" text or changed icon (observable confirmation)
     // - navigator.clipboard.writeText was called with the current password string
-    // await waitFor(() => expect(screen.getByText(/copied/i)).toBeInTheDocument())
-    // expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.any(String))
+    await waitFor(() => expect(screen.getByText(/copied/i)).toBeInTheDocument())
+    expect(clipboardWriteText).toHaveBeenCalledWith(expect.any(String))
 
     // Advance time past 1 000 ms and confirm revert
-    // act(() => { vi.advanceTimersByTime(1001) })
-    // await waitFor(() => expect(screen.queryByText(/copied/i)).not.toBeInTheDocument())
-    // vi.useRealTimers()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+    })
+    await waitFor(() => expect(screen.queryByText(/copied/i)).not.toBeInTheDocument())
   })
 
   it('clipboard write failure shows non-blocking error for 2 000 ms; password remains visible', async () => {
     // Arrange
-    // vi.useFakeTimers()
-    // Object.defineProperty(navigator, 'clipboard', {
-    //   value: { writeText: vi.fn().mockRejectedValue(new Error('Permission denied')) },
-    //   writable: true, configurable: true,
-    // })
-    // render(<App />)
-    // const copyButton = screen.getByRole('button', { name: /copy/i })
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('Permission denied')) },
+      writable: true, configurable: true,
+    })
+    render(<App />)
+    const copyButton = screen.getByRole('button', { name: /copy/i })
 
     // Act
-    // await userEvent.click(copyButton)
+    fireEvent.click(copyButton)
 
     // Assert — error message visible; password field still present
     // Verification items:
     // - An error message element is visible (role="alert" per AC-16 / UI Spec accessibility requirements)
     // - Password field still shows the password value
     // - Error message has not disappeared yet (< 2 000 ms)
-    // await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
-    // const passwordField = screen.getByRole('textbox', { name: /password/i })
-    // expect((passwordField as HTMLInputElement).value).not.toBe('')
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    const passwordField = screen.getByRole('textbox', { name: /password/i })
+    expect((passwordField as HTMLInputElement).value).not.toBe('')
 
     // Advance past 2 000 ms and confirm error disappears
-    // act(() => { vi.advanceTimersByTime(2001) })
-    // await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
-    // vi.useRealTimers()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2100))
+    })
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
   })
 })
 
