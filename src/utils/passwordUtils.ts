@@ -28,8 +28,11 @@ export function generate(config: GeneratorConfig): string {
   const result: string[] = []
   const length = config.length
 
+  // Max quota for crypto.getRandomValues is 65536 bytes = 16384 Uint32 elements
+  const MAX_BATCH = 16384
   while (result.length < length) {
-    const buffer = new Uint32Array(length * 2)
+    const batchSize = Math.min(length * 2, MAX_BATCH)
+    const buffer = new Uint32Array(batchSize)
     crypto.getRandomValues(buffer)
     for (let i = 0; i < buffer.length && result.length < length; i++) {
       const value = buffer[i]
