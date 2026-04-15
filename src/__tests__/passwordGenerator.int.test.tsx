@@ -463,40 +463,45 @@ describe('AC-15/16: Copy button feedback states', () => {
 // @complexity: low
 // ---------------------------------------------------------------------------
 describe('AC-17/18: Theme toggle switches dark/light class on <html>', () => {
-  it('renders in dark mode on initial mount (dark class on documentElement)', async () => {
+  beforeEach(() => {
+    // Reset documentElement classes between tests
+    document.documentElement.classList.remove('dark', 'light')
+  })
+
+  it('renders in dark mode on initial mount (no light class on documentElement)', async () => {
     // Arrange & Act
-    // render(<App />)
+    render(<App />)
 
     // Assert
     // Verification items:
-    // - document.documentElement has class 'dark'
-    // - document.documentElement does not have class 'light'
-    // expect(document.documentElement).toHaveClass('dark')
-    // expect(document.documentElement).not.toHaveClass('light')
+    // - document.documentElement does not have class 'light' (dark is default)
+    // - ThemeToggle aria-label says "Switch to light mode" (currently dark)
+    expect(document.documentElement).not.toHaveClass('light')
+    expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument()
   })
 
-  it('clicking theme toggle switches class from dark to light then back to dark', async () => {
+  it('clicking theme toggle adds light class then removes it on second click', async () => {
     // Arrange
-    // render(<App />)
-    // const themeToggle = screen.getByRole('button', { name: /switch to light mode/i })
+    render(<App />)
+    const themeToggle = screen.getByRole('button', { name: /switch to light mode/i })
 
     // Act — switch to light
-    // await userEvent.click(themeToggle)
+    await userEvent.click(themeToggle)
 
     // Assert — light mode applied
     // Verification items:
-    // - documentElement has class 'light', not 'dark'
+    // - documentElement has class 'light'
     // - ThemeToggle aria-label updates to "Switch to dark mode"
-    // expect(document.documentElement).toHaveClass('light')
-    // expect(document.documentElement).not.toHaveClass('dark')
-    // const darkToggle = screen.getByRole('button', { name: /switch to dark mode/i })
+    expect(document.documentElement).toHaveClass('light')
+    const darkToggle = screen.getByRole('button', { name: /switch to dark mode/i })
+    expect(darkToggle).toBeInTheDocument()
 
     // Act — switch back to dark
-    // await userEvent.click(darkToggle)
+    await userEvent.click(darkToggle)
 
-    // Assert — dark mode restored
-    // expect(document.documentElement).toHaveClass('dark')
-    // expect(document.documentElement).not.toHaveClass('light')
+    // Assert — dark mode restored (light class removed)
+    expect(document.documentElement).not.toHaveClass('light')
+    expect(screen.getByRole('button', { name: /switch to light mode/i })).toBeInTheDocument()
   })
 })
 

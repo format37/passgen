@@ -54,6 +54,10 @@
   --color-error-bg: #fee2e2;
 }
 
+.light .card-shadow {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
 /* Global base styles */
 html {
   font-family: var(--font-sans);
@@ -100,6 +104,10 @@ input[type='range']::-moz-range-thumb {
 }
 
 @layer components {
+  .card-shadow {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  }
+
   .password-display {
     font-family: var(--font-mono);
     font-size: var(--font-size-password);

@@ -14,6 +14,7 @@ export function ThemeToggle({ theme, onToggle }: ThemeToggleProps) {
       type="button"
       onClick={onToggle}
       aria-label={label}
+      title={label}
       className="min-w-[2.75rem] min-h-[2.75rem] flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
     >
       {isDark ? (

@@ -8,7 +8,7 @@ export function PasswordCard() {
   const generator = usePasswordGenerator()
 
   return (
-    <div className="bg-[--color-bg-card] rounded-2xl p-6 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col gap-5">
+    <div className="bg-[--color-bg-card] rounded-2xl p-6 md:p-8 card-shadow flex flex-col gap-5">
       <PasswordDisplay
         password={generator.password}
         strengthScore={generator.strengthScore}
