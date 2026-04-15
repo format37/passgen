@@ -100,66 +100,72 @@ describe('AC-01: Password generation on mount', () => {
 describe('AC-03/04: Length control updates password length and regenerates', () => {
   it('slider change produces a new password of the selected length', async () => {
     // Arrange
-    // render(<App />)
-    // const slider = screen.getByRole('slider', { name: /password length/i })
+    render(<App />)
+    const slider = screen.getByRole('slider', { name: /password length/i })
 
     // Act — simulate moving slider to length 24
-    // fireEvent.change(slider, { target: { value: '24' } })
+    fireEvent.change(slider, { target: { value: '24' } })
 
     // Assert
     // Verification items:
     // - Slider aria-valuenow reflects 24
     // - Password field value has length === 24
     // - crypto.getRandomValues was called again (regeneration occurred)
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   expect((passwordField as HTMLInputElement).value).toHaveLength(24)
-    // })
-    // expect(slider).toHaveAttribute('aria-valuenow', '24')
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      expect((passwordField as HTMLInputElement).value).toHaveLength(24)
+    })
+    expect(slider).toHaveAttribute('aria-valuenow', '24')
   })
 
   it('+ button increments length by 1 and regenerates; disabled at maximum 64', async () => {
     // Arrange
-    // render(<App />)  // default length 16
-    // const plusButton = screen.getByRole('button', { name: /increment length|increase/i })
+    render(<App />)  // default length 16
+    const plusButton = screen.getByRole('button', { name: /increment length/i })
 
     // Act
-    // await userEvent.click(plusButton)
+    await userEvent.click(plusButton)
 
     // Assert
     // Verification items:
     // - Password length is now 17
     // - + button is not disabled (still below 64)
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   expect((passwordField as HTMLInputElement).value).toHaveLength(17)
-    // })
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      expect((passwordField as HTMLInputElement).value).toHaveLength(17)
+    })
 
-    // Boundary: move to max, then verify button disabled
-    // ... (navigate to length 64, then)
-    // expect(plusButton).toBeDisabled()
+    // Boundary: move to max via slider, then verify button disabled
+    const slider = screen.getByRole('slider', { name: /password length/i })
+    fireEvent.change(slider, { target: { value: '64' } })
+    await waitFor(() => {
+      expect(plusButton).toBeDisabled()
+    })
   })
 
   it('- button decrements length by 1 and regenerates; disabled at minimum 8', async () => {
     // Arrange
-    // render(<App />)  // default length 16
-    // const minusButton = screen.getByRole('button', { name: /decrement length|decrease/i })
+    render(<App />)  // default length 16
+    const minusButton = screen.getByRole('button', { name: /decrement length/i })
 
     // Act
-    // await userEvent.click(minusButton)
+    await userEvent.click(minusButton)
 
     // Assert
     // Verification items:
     // - Password length is now 15
     // - − button is not disabled (still above 8)
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   expect((passwordField as HTMLInputElement).value).toHaveLength(15)
-    // })
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      expect((passwordField as HTMLInputElement).value).toHaveLength(15)
+    })
 
-    // Boundary: move to min, then verify button disabled
-    // ... (navigate to length 8, then)
-    // expect(minusButton).toBeDisabled()
+    // Boundary: move to min via slider, then verify button disabled
+    const slider = screen.getByRole('slider', { name: /password length/i })
+    fireEvent.change(slider, { target: { value: '8' } })
+    await waitFor(() => {
+      expect(minusButton).toBeDisabled()
+    })
   })
 })
 
@@ -178,43 +184,43 @@ describe('AC-03/04: Length control updates password length and regenerates', () 
 describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
   it('enabling symbols toggle produces a password that may contain symbol characters', async () => {
     // Arrange
-    // render(<App />)
-    // const symbolsToggle = screen.getByRole('checkbox', { name: /symbols|#\$&/i })
-    // expect(symbolsToggle).not.toBeChecked()  // default: symbols disabled
+    render(<App />)
+    const symbolsToggle = screen.getByRole('checkbox', { name: '#$&' })
+    expect(symbolsToggle).not.toBeChecked()  // default: symbols disabled
 
     // Act
-    // await userEvent.click(symbolsToggle)
+    await userEvent.click(symbolsToggle)
 
     // Assert
     // Verification items:
     // - Symbols toggle is now checked
     // - crypto.getRandomValues called again (regeneration)
     // - Password field is non-empty and still displays a value
-    // expect(symbolsToggle).toBeChecked()
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   expect((passwordField as HTMLInputElement).value).not.toBe('')
-    // })
-    // expect(deterministicGetRandomValues).toHaveBeenCalledTimes(2) // mount + toggle
+    expect(symbolsToggle).toBeChecked()
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      expect((passwordField as HTMLInputElement).value).not.toBe('')
+    })
+    expect(deterministicGetRandomValues).toHaveBeenCalledTimes(2) // mount + toggle
   })
 
   it('disabling uppercase toggle (when multiple toggles active) regenerates without uppercase chars', async () => {
     // Arrange
-    // render(<App />)  // uppercase, lowercase, digits enabled
-    // const uppercaseToggle = screen.getByRole('checkbox', { name: /uppercase|ABC/i })
+    render(<App />)  // uppercase, lowercase, digits enabled
+    const uppercaseToggle = screen.getByRole('checkbox', { name: 'ABC' })
 
     // Act
-    // await userEvent.click(uppercaseToggle)  // disable uppercase (2 toggles remain)
+    await userEvent.click(uppercaseToggle)  // disable uppercase (2 toggles remain)
 
     // Assert
     // Verification items:
     // - Uppercase toggle is unchecked
     // - Password field contains no uppercase letters A-Z
-    // expect(uppercaseToggle).not.toBeChecked()
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   expect((passwordField as HTMLInputElement).value).toMatch(/^[a-z0-9]+$/)
-    // })
+    expect(uppercaseToggle).not.toBeChecked()
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      expect((passwordField as HTMLInputElement).value).toMatch(/^[a-z0-9]+$/)
+    })
   })
 })
 
@@ -233,27 +239,28 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
 describe('AC-06: Sole-active toggle cannot be unchecked', () => {
   it('clicking the only active toggle leaves it checked and does not change the password', async () => {
     // Arrange — disable uppercase and digits to leave only lowercase
-    // render(<App />)
-    // const uppercaseToggle = screen.getByRole('checkbox', { name: /uppercase|ABC/i })
-    // const digitsToggle = screen.getByRole('checkbox', { name: /digits|123/i })
-    // const lowercaseToggle = screen.getByRole('checkbox', { name: /lowercase|abc/i })
-    // await userEvent.click(uppercaseToggle)  // disable
-    // await userEvent.click(digitsToggle)     // disable → only lowercase remains
+    render(<App />)
+    const uppercaseToggle = screen.getByRole('checkbox', { name: 'ABC' })
+    const digitsToggle = screen.getByRole('checkbox', { name: '123' })
+    const lowercaseToggle = screen.getByRole('checkbox', { name: 'abc' })
+    await userEvent.click(uppercaseToggle)  // disable
+    await userEvent.click(digitsToggle)     // disable → only lowercase remains
 
     // Capture current password to detect (absence of) change
-    // const passwordBefore = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
+    const passwordBefore = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
 
     // Act — attempt to uncheck the sole remaining toggle
-    // await userEvent.click(lowercaseToggle)
+    await userEvent.click(lowercaseToggle)
 
     // Assert
     // Verification items:
     // - Lowercase toggle remains checked
     // - Password display is non-empty (generation still active)
     // - Sole-toggle guard prevents disabling: toggle checked attribute unchanged
-    // expect(lowercaseToggle).toBeChecked()
-    // const passwordAfter = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
-    // expect(passwordAfter).toBeTruthy()
+    expect(lowercaseToggle).toBeChecked()
+    const passwordAfter = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
+    expect(passwordAfter).toBeTruthy()
+    expect(passwordAfter).toBe(passwordBefore)
   })
 })
 
@@ -272,23 +279,23 @@ describe('AC-06: Sole-active toggle cannot be unchecked', () => {
 describe('AC-09: Ambiguous character filter removes target characters', () => {
   it('enabling exclude-ambiguous toggle produces a password containing none of oOIl1i|cC', async () => {
     // Arrange — use real crypto stub; run many passwords to assert statistical exclusion
-    // render(<App />)
-    // const ambiguousToggle = screen.getByRole('checkbox', { name: /exclude ambiguous/i })
-    // expect(ambiguousToggle).not.toBeChecked()  // default off
+    render(<App />)
+    const ambiguousToggle = screen.getByRole('checkbox', { name: /exclude ambiguous/i })
+    expect(ambiguousToggle).not.toBeChecked()  // default off
 
     // Act
-    // await userEvent.click(ambiguousToggle)
+    await userEvent.click(ambiguousToggle)
 
     // Assert
     // Verification items:
     // - Ambiguous toggle is checked
     // - Password field does not contain any of: o O I l 1 i | c C
-    // expect(ambiguousToggle).toBeChecked()
-    // await waitFor(() => {
-    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
-    //   const value = (passwordField as HTMLInputElement).value
-    //   expect(value).not.toMatch(/[oOIl1i|cC]/)
-    // })
+    expect(ambiguousToggle).toBeChecked()
+    await waitFor(() => {
+      const passwordField = screen.getByRole('textbox', { name: /password/i })
+      const value = (passwordField as HTMLInputElement).value
+      expect(value).not.toMatch(/[oOIl1i|cC]/)
+    })
   })
 })
 
