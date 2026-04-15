@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors — dark theme (default) */
+  --color-bg-base: #0f172a;
+  --color-bg-card: #1e293b;
+  --color-bg-input: #0f172a;
+  --color-border: #334155;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #475569;
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
+  --color-btn-bg: #1e293b;
+  --color-btn-hover: #334155;
+  --color-strength-weak: #ef4444;
+  --color-strength-medium: #f97316;
+  --color-strength-strong: #eab308;
+  --color-strength-very-strong: #22c55e;
+  --color-error-text: #fca5a5;
+  --color-error-bg: #450a0a;
+
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --font-mono: 'Courier New', Courier, 'Lucida Console', monospace;
+  --font-size-password: 1.125rem;
+  --font-size-label: 0.875rem;
+  --font-size-badge: 0.75rem;
+
+  /* Spacing */
+  --spacing-card-pad: 2rem;
+  --spacing-card-pad-sm: 1.25rem;
+  --spacing-section-gap: 1.5rem;
+  --spacing-control-gap: 0.75rem;
+}
+
+/* Light theme overrides */
+.light {
+  --color-bg-base: #f8fafc;
+  --color-bg-card: #ffffff;
+  --color-bg-input: #f1f5f9;
+  --color-border: #cbd5e1;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-accent: #4f46e5;
+  --color-btn-bg: #e2e8f0;
+  --color-btn-hover: #cbd5e1;
+  --color-strength-weak: #dc2626;
+  --color-strength-medium: #ea580c;
+  --color-strength-strong: #ca8a04;
+  --color-strength-very-strong: #16a34a;
+  --color-error-text: #991b1b;
+  --color-error-bg: #fee2e2;
+}
+
+/* Global base styles */
+html {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  transition: background-color 200ms ease-in-out, color 200ms ease-in-out;
+}
+
+/* Focus-visible ring */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Cross-platform range slider — track */
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-border);
+}
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-border);
+}
+
+/* Cross-platform range slider — thumb */
+input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  margin-top: -8px;
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  border: none;
+  cursor: pointer;
+}
+
+@layer components {
+  .password-display {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-password);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    background-color: var(--color-bg-input);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    width: 100%;
+  }
+
+  .strength-badge {
+    font-size: var(--font-size-badge);
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .control-label {
+    font-size: var(--font-size-label);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+}
