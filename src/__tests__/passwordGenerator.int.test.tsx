@@ -1,0 +1,592 @@
+// Password Generator Integration Test — Design Doc: frontend-design.md, prd.md
+// Generated: 2026-04-15 | Budget Used: 11/3 integration (user-directed scope override)
+// Test Type: Integration Tests
+// Implementation Timing: Created alongside implementation
+
+import { describe, it, vi, beforeEach, afterEach } from 'vitest'
+
+// ---------------------------------------------------------------------------
+// NOTE ON MOCK BOUNDARIES
+// External boundaries mocked:
+//   - window.crypto.getRandomValues  (CSPRNG — non-deterministic, required for test isolation)
+//   - navigator.clipboard.writeText  (Clipboard API — async external I/O)
+//   - buildPool (only in test #10 via module mock to simulate empty-pool injection)
+// Internal components (passwordUtils.generate internals, zxcvbn-light) are NOT mocked;
+// they run as real implementations to verify observable integration behavior.
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// SHARED SETUP
+// ---------------------------------------------------------------------------
+
+// Deterministic crypto stub — fills buffer with sequential values cycling
+// through all characters of any pool.  Tests that need a specific character
+// profile replace this stub inline.
+const deterministicGetRandomValues = vi.fn((buffer: Uint32Array) => {
+  for (let i = 0; i < buffer.length; i++) {
+    buffer[i] = i * 1_000_003 // large prime spread ensures varied chars
+  }
+  return buffer
+})
+
+beforeEach(() => {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: { getRandomValues: deterministicGetRandomValues },
+    writable: true,
+    configurable: true,
+  })
+  vi.clearAllMocks()
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+// ---------------------------------------------------------------------------
+// TEST 1 — Password generation on mount
+// ---------------------------------------------------------------------------
+// AC: AC-01 "Given the page has finished loading, a non-empty password matching
+//     the default settings (length 16, uppercase + lowercase + digits enabled,
+//     symbols disabled, ambiguous characters included) is displayed within 500 ms."
+// EARS: (none) — Basic functionality
+// ROI: 99 | Business Value: 10 (core product) | Frequency: 10 (every user)
+// Behavior: App mounts → usePasswordGenerator runs → 16-char password displayed
+// @category: core-functionality
+// @dependency: App, usePasswordGenerator, passwordUtils, window.crypto
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-01: Password generation on mount', () => {
+  it('displays a non-empty 16-character password immediately after mount using default charset', async () => {
+    // Arrange
+    // (App with default state — no user interactions)
+
+    // Act
+    // render(<App />)  // Uncomment when App is implemented
+
+    // Assert
+    // Verification items:
+    // - Password field is present in the DOM (not masked)
+    // - Password value is non-empty
+    // - Password length is exactly 16 characters
+    // - Password contains only characters from uppercase + lowercase + digits pool
+    //   (no symbols, ambiguous chars included in pool by default)
+    // - crypto.getRandomValues was called at least once
+    // const passwordField = screen.getByRole('textbox', { name: /password/i })
+    // expect(passwordField).toBeInTheDocument()
+    // const value = (passwordField as HTMLInputElement).value
+    // expect(value).toHaveLength(16)
+    // expect(value).toMatch(/^[A-Za-z0-9]+$/)
+    // expect(deterministicGetRandomValues).toHaveBeenCalled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 2 — Length control: slider and +/- buttons update password length
+// ---------------------------------------------------------------------------
+// AC: AC-03 "Given the slider is moved to a new position, the password field
+//     updates immediately with a newly generated password of the selected length."
+// AC: AC-04 "+/- buttons clamp to [8,64] and trigger regeneration; buttons
+//     disabled at bounds."
+// EARS: When slider moves / When button clicked
+// ROI: 81 | Business Value: 9 | Frequency: 9
+// Behavior: Length control interaction → state update → new password displayed
+// @category: core-functionality
+// @dependency: App, LengthControl, usePasswordGenerator, passwordUtils
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-03/04: Length control updates password length and regenerates', () => {
+  it('slider change produces a new password of the selected length', async () => {
+    // Arrange
+    // render(<App />)
+    // const slider = screen.getByRole('slider', { name: /password length/i })
+
+    // Act — simulate moving slider to length 24
+    // fireEvent.change(slider, { target: { value: '24' } })
+
+    // Assert
+    // Verification items:
+    // - Slider aria-valuenow reflects 24
+    // - Password field value has length === 24
+    // - crypto.getRandomValues was called again (regeneration occurred)
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).toHaveLength(24)
+    // })
+    // expect(slider).toHaveAttribute('aria-valuenow', '24')
+  })
+
+  it('+ button increments length by 1 and regenerates; disabled at maximum 64', async () => {
+    // Arrange
+    // render(<App />)  // default length 16
+    // const plusButton = screen.getByRole('button', { name: /increment length|increase/i })
+
+    // Act
+    // await userEvent.click(plusButton)
+
+    // Assert
+    // Verification items:
+    // - Password length is now 17
+    // - + button is not disabled (still below 64)
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).toHaveLength(17)
+    // })
+
+    // Boundary: move to max, then verify button disabled
+    // ... (navigate to length 64, then)
+    // expect(plusButton).toBeDisabled()
+  })
+
+  it('- button decrements length by 1 and regenerates; disabled at minimum 8', async () => {
+    // Arrange
+    // render(<App />)  // default length 16
+    // const minusButton = screen.getByRole('button', { name: /decrement length|decrease/i })
+
+    // Act
+    // await userEvent.click(minusButton)
+
+    // Assert
+    // Verification items:
+    // - Password length is now 15
+    // - − button is not disabled (still above 8)
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).toHaveLength(15)
+    // })
+
+    // Boundary: move to min, then verify button disabled
+    // ... (navigate to length 8, then)
+    // expect(minusButton).toBeDisabled()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 3 — Charset toggles update the character pool and regenerate
+// ---------------------------------------------------------------------------
+// AC: AC-05 "Given a toggle is switched, the character pool is updated and a
+//     new password is generated immediately from the updated pool."
+// EARS: When toggle changed
+// ROI: 65 | Business Value: 8 | Frequency: 8
+// Behavior: Toggle state change → effectivePool rebuilt → new password displayed
+// @category: core-functionality
+// @dependency: App, CharsetToggles, usePasswordGenerator, passwordUtils
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
+  it('enabling symbols toggle produces a password that may contain symbol characters', async () => {
+    // Arrange
+    // render(<App />)
+    // const symbolsToggle = screen.getByRole('checkbox', { name: /symbols|#\$&/i })
+    // expect(symbolsToggle).not.toBeChecked()  // default: symbols disabled
+
+    // Act
+    // await userEvent.click(symbolsToggle)
+
+    // Assert
+    // Verification items:
+    // - Symbols toggle is now checked
+    // - crypto.getRandomValues called again (regeneration)
+    // - Password field is non-empty and still displays a value
+    // expect(symbolsToggle).toBeChecked()
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).not.toBe('')
+    // })
+    // expect(deterministicGetRandomValues).toHaveBeenCalledTimes(2) // mount + toggle
+  })
+
+  it('disabling uppercase toggle (when multiple toggles active) regenerates without uppercase chars', async () => {
+    // Arrange
+    // render(<App />)  // uppercase, lowercase, digits enabled
+    // const uppercaseToggle = screen.getByRole('checkbox', { name: /uppercase|ABC/i })
+
+    // Act
+    // await userEvent.click(uppercaseToggle)  // disable uppercase (2 toggles remain)
+
+    // Assert
+    // Verification items:
+    // - Uppercase toggle is unchecked
+    // - Password field contains no uppercase letters A-Z
+    // expect(uppercaseToggle).not.toBeChecked()
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).toMatch(/^[a-z0-9]+$/)
+    // })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 4 — Sole-active toggle prevention: cannot uncheck last active toggle
+// ---------------------------------------------------------------------------
+// AC: AC-06 "At least one toggle must remain enabled at all times. Attempting
+//     to disable the last enabled toggle has no effect."
+// EARS: When sole remaining active charset toggle is activated (attempted uncheck)
+// ROI: 59 | Business Value: 8 | Frequency: 7
+// Behavior: User unchecks last checked toggle → state unchanged → toggle stays checked
+// @category: core-functionality
+// @dependency: App, CharsetToggles, usePasswordGenerator
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-06: Sole-active toggle cannot be unchecked', () => {
+  it('clicking the only active toggle leaves it checked and does not change the password', async () => {
+    // Arrange — disable uppercase and digits to leave only lowercase
+    // render(<App />)
+    // const uppercaseToggle = screen.getByRole('checkbox', { name: /uppercase|ABC/i })
+    // const digitsToggle = screen.getByRole('checkbox', { name: /digits|123/i })
+    // const lowercaseToggle = screen.getByRole('checkbox', { name: /lowercase|abc/i })
+    // await userEvent.click(uppercaseToggle)  // disable
+    // await userEvent.click(digitsToggle)     // disable → only lowercase remains
+
+    // Capture current password to detect (absence of) change
+    // const passwordBefore = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
+
+    // Act — attempt to uncheck the sole remaining toggle
+    // await userEvent.click(lowercaseToggle)
+
+    // Assert
+    // Verification items:
+    // - Lowercase toggle remains checked
+    // - Password display is non-empty (generation still active)
+    // - Sole-toggle guard prevents disabling: toggle checked attribute unchanged
+    // expect(lowercaseToggle).toBeChecked()
+    // const passwordAfter = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
+    // expect(passwordAfter).toBeTruthy()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 5 — Ambiguous character filter removes oOIl1i|cC from generated passwords
+// ---------------------------------------------------------------------------
+// AC: AC-09 "When the toggle is enabled, no generated password contains any
+//     of the characters o, O, I, l, 1, i, |, c, C."
+// EARS: When ambiguous exclusion toggle enabled
+// ROI: 40 | Business Value: 7 | Frequency: 5
+// Behavior: excludeAmbiguous=true → pool filtered → password sans ambiguous chars
+// @category: core-functionality
+// @dependency: App, AmbiguousFilter, usePasswordGenerator, passwordUtils (buildPool)
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-09: Ambiguous character filter removes target characters', () => {
+  it('enabling exclude-ambiguous toggle produces a password containing none of oOIl1i|cC', async () => {
+    // Arrange — use real crypto stub; run many passwords to assert statistical exclusion
+    // render(<App />)
+    // const ambiguousToggle = screen.getByRole('checkbox', { name: /exclude ambiguous/i })
+    // expect(ambiguousToggle).not.toBeChecked()  // default off
+
+    // Act
+    // await userEvent.click(ambiguousToggle)
+
+    // Assert
+    // Verification items:
+    // - Ambiguous toggle is checked
+    // - Password field does not contain any of: o O I l 1 i | c C
+    // expect(ambiguousToggle).toBeChecked()
+    // await waitFor(() => {
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   const value = (passwordField as HTMLInputElement).value
+    //   expect(value).not.toMatch(/[oOIl1i|cC]/)
+    // })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 6 — Strength indicator: zxcvbn-light score maps to correct label
+// ---------------------------------------------------------------------------
+// AC: AC-13 "The four labels correspond to zxcvbn-light scores 0–1 → Weak,
+//     2 → Medium, 3 → Strong, 4 → Very Strong."
+// EARS: When password changes
+// ROI: 70 | Business Value: 7 | Frequency: 10
+// Behavior: password value fed to zxcvbn → score → StrengthLabel displayed in badge
+// @category: core-functionality
+// @dependency: App, PasswordDisplay (strength badge), usePasswordGenerator, zxcvbn-light
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-13: Strength indicator maps zxcvbn score to correct label', () => {
+  it('very short or weak password shows Weak label', async () => {
+    // Arrange — inject a password known to score 0 or 1 with zxcvbn-light
+    // (e.g., all-lowercase 8-char common pattern)
+    // Stub crypto to always return characters from lowercase pool: 'aaaaaaaa'
+    // (override deterministicGetRandomValues to return 0 for all indices)
+
+    // render(<App />)  // let mount generate the weak password
+
+    // Assert
+    // Verification items:
+    // - Strength badge text is "Weak"
+    // - Badge has appropriate visual color token class/style
+    // await waitFor(() => {
+    //   const badge = screen.getByRole('status') // or text match
+    //   expect(badge).toHaveTextContent('Weak')
+    // })
+  })
+
+  it('long mixed-charset password shows Strong or Very Strong label', async () => {
+    // Arrange — enable all charsets, set length to 32 to guarantee high score
+    // render(<App />)
+    // const symbolsToggle = screen.getByRole('checkbox', { name: /symbols|#\$&/i })
+    // await userEvent.click(symbolsToggle)
+
+    // Assert
+    // Verification items:
+    // - Strength badge text is "Strong" or "Very Strong"
+    // await waitFor(() => {
+    //   const badge = screen.getByRole('status')
+    //   expect(['Strong', 'Very Strong']).toContain(badge.textContent)
+    // })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 7 — Regenerate button calls crypto.getRandomValues
+// ---------------------------------------------------------------------------
+// AC: AC-14 "Clicking the button always produces a new call to
+//     crypto.getRandomValues() regardless of the current password value."
+// EARS: When regenerate button is clicked
+// ROI: 73 | Business Value: 9 | Frequency: 8
+// Behavior: click → onRegenerate → generate() → crypto.getRandomValues called
+// @category: core-functionality
+// @dependency: App, PasswordDisplay (regenerate button), usePasswordGenerator, passwordUtils
+// @complexity: low
+// ---------------------------------------------------------------------------
+describe('AC-14: Regenerate button always invokes crypto.getRandomValues', () => {
+  it('clicking regenerate calls getRandomValues at least once more than before click', async () => {
+    // Arrange
+    // render(<App />)
+    // const callsBefore = deterministicGetRandomValues.mock.calls.length
+    // const regenerateButton = screen.getByRole('button', { name: /regenerate|refresh/i })
+
+    // Act
+    // await userEvent.click(regenerateButton)
+
+    // Assert
+    // Verification items:
+    // - getRandomValues call count increased after click (new generation occurred)
+    // - No equality check / retry guard skipped the call
+    // expect(deterministicGetRandomValues.mock.calls.length).toBeGreaterThan(callsBefore)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 8 — Copy button: success confirmation and error state
+// ---------------------------------------------------------------------------
+// AC: AC-15 "After clicking, a brief visual confirmation is shown for at least
+//     1 000 ms."
+// AC: AC-16 "When clipboard write fails, a visible non-blocking error message
+//     is displayed for at least 2 000 ms; password remains visible."
+// EARS: When copy button clicked (success) | When copy button clicked (failure)
+// ROI: 81 (success path) | Business Value: 9 | Frequency: 9
+// Behavior: writeText resolves → copyState='copied' → UI shows confirmation
+//           writeText rejects → copyState='error' → UI shows error message
+// @category: core-functionality
+// @dependency: App, PasswordDisplay (copy button), usePasswordGenerator, navigator.clipboard
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-15/16: Copy button feedback states', () => {
+  it('successful clipboard write shows Copied confirmation and reverts after 1 000 ms', async () => {
+    // Arrange
+    // vi.useFakeTimers()
+    // Object.defineProperty(navigator, 'clipboard', {
+    //   value: { writeText: vi.fn().mockResolvedValue(undefined) },
+    //   writable: true, configurable: true,
+    // })
+    // render(<App />)
+    // const copyButton = screen.getByRole('button', { name: /copy/i })
+
+    // Act
+    // await userEvent.click(copyButton)
+
+    // Assert — confirmation visible immediately after click
+    // Verification items:
+    // - Button shows "Copied!" text or changed icon (observable confirmation)
+    // - navigator.clipboard.writeText was called with the current password string
+    // await waitFor(() => expect(screen.getByText(/copied/i)).toBeInTheDocument())
+    // expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expect.any(String))
+
+    // Advance time past 1 000 ms and confirm revert
+    // act(() => { vi.advanceTimersByTime(1001) })
+    // await waitFor(() => expect(screen.queryByText(/copied/i)).not.toBeInTheDocument())
+    // vi.useRealTimers()
+  })
+
+  it('clipboard write failure shows non-blocking error for 2 000 ms; password remains visible', async () => {
+    // Arrange
+    // vi.useFakeTimers()
+    // Object.defineProperty(navigator, 'clipboard', {
+    //   value: { writeText: vi.fn().mockRejectedValue(new Error('Permission denied')) },
+    //   writable: true, configurable: true,
+    // })
+    // render(<App />)
+    // const copyButton = screen.getByRole('button', { name: /copy/i })
+
+    // Act
+    // await userEvent.click(copyButton)
+
+    // Assert — error message visible; password field still present
+    // Verification items:
+    // - An error message element is visible (role="alert" per AC-16 / UI Spec accessibility requirements)
+    // - Password field still shows the password value
+    // - Error message has not disappeared yet (< 2 000 ms)
+    // await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    // const passwordField = screen.getByRole('textbox', { name: /password/i })
+    // expect((passwordField as HTMLInputElement).value).not.toBe('')
+
+    // Advance past 2 000 ms and confirm error disappears
+    // act(() => { vi.advanceTimersByTime(2001) })
+    // await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
+    // vi.useRealTimers()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 9 — Theme toggle applies dark/light class to <html>
+// ---------------------------------------------------------------------------
+// AC: AC-17 "On page load with no prior user interaction, the UI uses dark
+//     color scheme."
+// AC: AC-18 "Toggling the control immediately applies the alternate color
+//     scheme to all UI elements."
+// EARS: When page loads | When theme toggle clicked
+// ROI: 38 | Business Value: 6 | Frequency: 6
+// Behavior: theme toggle → document.documentElement class set to 'dark'/'light'
+// @category: core-functionality
+// @dependency: App, ThemeToggle
+// @complexity: low
+// ---------------------------------------------------------------------------
+describe('AC-17/18: Theme toggle switches dark/light class on <html>', () => {
+  it('renders in dark mode on initial mount (dark class on documentElement)', async () => {
+    // Arrange & Act
+    // render(<App />)
+
+    // Assert
+    // Verification items:
+    // - document.documentElement has class 'dark'
+    // - document.documentElement does not have class 'light'
+    // expect(document.documentElement).toHaveClass('dark')
+    // expect(document.documentElement).not.toHaveClass('light')
+  })
+
+  it('clicking theme toggle switches class from dark to light then back to dark', async () => {
+    // Arrange
+    // render(<App />)
+    // const themeToggle = screen.getByRole('button', { name: /switch to light mode/i })
+
+    // Act — switch to light
+    // await userEvent.click(themeToggle)
+
+    // Assert — light mode applied
+    // Verification items:
+    // - documentElement has class 'light', not 'dark'
+    // - ThemeToggle aria-label updates to "Switch to dark mode"
+    // expect(document.documentElement).toHaveClass('light')
+    // expect(document.documentElement).not.toHaveClass('dark')
+    // const darkToggle = screen.getByRole('button', { name: /switch to dark mode/i })
+
+    // Act — switch back to dark
+    // await userEvent.click(darkToggle)
+
+    // Assert — dark mode restored
+    // expect(document.documentElement).toHaveClass('dark')
+    // expect(document.documentElement).not.toHaveClass('light')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 10 — Pool-error state: mock buildPool returning empty string
+// ---------------------------------------------------------------------------
+// AC: AC-10 "When the effective character pool after exclusion is empty, the
+//     password field is replaced by a visible error state and no password
+//     string is shown."
+// EARS: When effective character pool is empty
+// ROI: 24 | Business Value: 8 | Frequency: 2 | Defect Detection: 10
+// Behavior: buildPool returns '' → errorKind='emptyPool' → error UI shown;
+//           controls remain enabled for recovery; copy/refresh disabled
+// Mock injection: vi.mock('../utils/passwordUtils') — buildPool returns ''
+// @category: edge-case
+// @dependency: App, usePasswordGenerator, passwordUtils (mocked buildPool)
+// @complexity: high
+// ---------------------------------------------------------------------------
+describe('AC-10: Pool-error state when effective character pool is empty', () => {
+  it('shows error message, hides password, disables copy and refresh when pool is empty', async () => {
+    // Arrange — inject buildPool mock that returns empty string
+    // vi.mock('../../utils/passwordUtils', () => ({
+    //   buildPool: vi.fn().mockReturnValue(''),
+    //   generate: vi.fn(),
+    // }))
+
+    // render(<App />)
+
+    // Assert — pool-error state is active
+    // Verification items:
+    // - No password text is shown in the password field (or field is absent)
+    // - A visible error message element is present (role="alert")
+    // - Copy button is disabled
+    // - Regenerate button is disabled
+    // - Charset toggle controls are still enabled (recovery path accessible)
+    // await waitFor(() => {
+    //   expect(screen.getByRole('alert')).toBeInTheDocument()
+    //   expect(screen.queryByRole('textbox', { name: /password/i })).not.toBeInTheDocument()
+    // })
+    // expect(screen.getByRole('button', { name: /copy/i })).toBeDisabled()
+    // expect(screen.getByRole('button', { name: /regenerate|refresh/i })).toBeDisabled()
+    // expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0) // controls still present
+  })
+
+  it('recovers from pool-error when a charset toggle is re-enabled', async () => {
+    // Arrange — start with only symbols enabled + ambiguous exclusion
+    // (contrived state that empties pool if symbols are all ambiguous;
+    //  or restore via unmocking buildPool after first render)
+
+    // Act — re-enable a charset that adds chars back to pool
+
+    // Assert
+    // Verification items:
+    // - Error message disappears
+    // - Password field is shown with a non-empty value
+    // - errorKind transitions back to 'none'
+    // await waitFor(() => {
+    //   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    //   const passwordField = screen.getByRole('textbox', { name: /password/i })
+    //   expect((passwordField as HTMLInputElement).value).not.toBe('')
+    // })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// TEST 11 — Crypto-error state: crypto.getRandomValues unavailable
+// ---------------------------------------------------------------------------
+// AC: AC-12 "When crypto.getRandomValues() is unavailable, the password display
+//     field is replaced by a browser compatibility error message identifying
+//     the issue, no password is generated, and no call to Math.random() is made."
+// EARS: When crypto.getRandomValues is unavailable on mount
+// ROI: 17 | Business Value: 9 | Frequency: 1 | Defect Detection: 10
+// Behavior: crypto absent on mount → errorKind='cryptoUnavailable' → compat error shown;
+//           no password generated; no Math.random called
+// @category: edge-case
+// @dependency: App, usePasswordGenerator, window.crypto (absent)
+// @complexity: medium
+// ---------------------------------------------------------------------------
+describe('AC-12: Crypto-error state when crypto.getRandomValues is unavailable', () => {
+  it('shows browser compatibility error and generates no password when crypto is absent', async () => {
+    // Arrange — remove crypto from globalThis to simulate unavailable API
+    // const mathRandomSpy = vi.spyOn(Math, 'random')
+    // Object.defineProperty(globalThis, 'crypto', {
+    //   value: undefined,
+    //   writable: true,
+    //   configurable: true,
+    // })
+
+    // Act
+    // render(<App />)
+
+    // Assert
+    // Verification items:
+    // - A browser compatibility error message is displayed (identifies the issue)
+    // - Password field is not rendered (no password generated)
+    // - Math.random was never called (no fallback to insecure random)
+    // await waitFor(() => {
+    //   expect(screen.getByRole('alert')).toBeInTheDocument()
+    //   expect(screen.getByRole('alert')).toHaveTextContent(/crypto|browser|not supported/i)
+    // })
+    // expect(screen.queryByRole('textbox', { name: /password/i })).not.toBeInTheDocument()
+    // expect(mathRandomSpy).not.toHaveBeenCalled()
+  })
+})
