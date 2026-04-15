@@ -450,16 +450,20 @@ describe('AC-15/16: Copy button feedback states', () => {
 
     // Assert — confirmation visible immediately after click
     // Verification items:
-    // - Button shows "Copied!" text or changed icon (observable confirmation)
+    // - Copy button aria-label changes to "Password copied" (observable confirmation)
     // - navigator.clipboard.writeText was called with the current password string
-    await waitFor(() => expect(screen.getByText(/copied/i)).toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /password copied/i })).toBeInTheDocument()
+    )
     expect(clipboardWriteText).toHaveBeenCalledWith(expect.any(String))
 
     // Advance time past 1 000 ms and confirm revert
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1100))
     })
-    await waitFor(() => expect(screen.queryByText(/copied/i)).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /password copied/i })).not.toBeInTheDocument()
+    )
   })
 
   it('clipboard write failure shows non-blocking error for 2 000 ms; password remains visible', async () => {

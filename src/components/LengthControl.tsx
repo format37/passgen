@@ -21,7 +21,7 @@ export function LengthControl({ length, onLengthChange, onIncrement, onDecrement
           onClick={onDecrement}
           disabled={isAtMin}
           aria-label="Decrement length"
-          className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] cursor-pointer hover:bg-[--color-btn-hover] hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <span aria-hidden="true" className="text-lg font-semibold leading-none">−</span>
         </button>
@@ -50,7 +50,7 @@ export function LengthControl({ length, onLengthChange, onIncrement, onDecrement
           onClick={onIncrement}
           disabled={isAtMax}
           aria-label="Increment length"
-          className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] cursor-pointer hover:bg-[--color-btn-hover] hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <span aria-hidden="true" className="text-lg font-semibold leading-none">+</span>
         </button>

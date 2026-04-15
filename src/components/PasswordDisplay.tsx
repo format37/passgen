@@ -56,34 +56,14 @@ export function PasswordDisplay({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Password input — read-only display field */}
-      <input
-        type="text"
-        readOnly
-        tabIndex={0}
-        value={password}
-        aria-label="Generated password"
-        className="password-display w-full min-h-[2.75rem] rounded-lg bg-[--color-bg-input] border border-[--color-border] px-3 py-2 text-[--color-text-primary] font-mono tracking-wider focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
-      />
-
-      {/* Strength badge */}
-      <div aria-live="polite" aria-atomic="true" role="status" className="flex items-center gap-2">
-        <span
-          className={`font-semibold uppercase tracking-wider text-sm ${STRENGTH_COLOR_CLASS[strengthLabel]}`}
-        >
-          {strengthLabel}
-        </span>
-        <span className="text-xs text-[--color-text-muted]">(score: {strengthScore}/4)</span>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        {/* Regenerate button */}
+      {/* Password row: [Regenerate] [input] [Copy] */}
+      <div className="flex items-center gap-2">
+        {/* Regenerate button — left of password */}
         <button
           type="button"
           onClick={onRegenerate}
           aria-label="Regenerate password"
-          className="min-w-[2.75rem] min-h-[2.75rem] flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="shrink-0 w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] text-[--color-text-primary] cursor-pointer hover:bg-[--color-btn-hover] hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           {/* Arrow-path icon (Heroicons outline) */}
           <svg
@@ -92,7 +72,7 @@ export function PasswordDisplay({
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-5 h-5 text-[--color-text-primary]"
+            className="w-5 h-5"
             aria-hidden="true"
           >
             <path
@@ -103,67 +83,78 @@ export function PasswordDisplay({
           </svg>
         </button>
 
-        {/* Copy button */}
+        {/* Password input — read-only display field */}
+        <input
+          type="text"
+          readOnly
+          tabIndex={0}
+          value={password}
+          aria-label="Generated password"
+          className="password-display flex-1 min-h-[2.75rem] rounded-lg bg-[--color-bg-input] border border-[--color-border] px-3 py-2 text-[--color-text-primary] font-mono tracking-wider focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
+        />
+
+        {/* Copy button — right of password */}
         <button
           type="button"
           onClick={onCopy}
           aria-label={isCopied ? 'Password copied' : isCopyError ? 'Copy failed' : 'Copy password'}
-          className="flex-1 min-h-[2.75rem] flex items-center justify-center gap-2 rounded-lg bg-[--color-accent] text-white text-sm font-medium hover:opacity-90 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="shrink-0 w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-accent] text-white cursor-pointer hover:bg-[--color-accent-hover] hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           {isCopied ? (
-            <>
-              {/* Check icon (Heroicons outline) */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-              </svg>
-              Copied!
-            </>
+            /* Check icon */
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+            </svg>
           ) : isCopyError ? (
-            <>
-              {/* X-mark icon (Heroicons outline) — signals copy failure */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-              Error
-            </>
+            /* X-mark icon */
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
           ) : (
-            <>
-              {/* Clipboard icon (Heroicons outline) */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
-                />
-              </svg>
-              Copy
-            </>
+            /* Clipboard icon */
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184"
+              />
+            </svg>
           )}
         </button>
+      </div>
+
+      {/* Strength badge */}
+      <div aria-live="polite" aria-atomic="true" role="status" className="flex items-center gap-2">
+        <span
+          className={`font-semibold uppercase tracking-wider text-sm ${STRENGTH_COLOR_CLASS[strengthLabel]}`}
+        >
+          {strengthLabel}
+        </span>
+        <span className="text-xs text-[--color-text-muted]">(score: {strengthScore}/4)</span>
       </div>
 
       {/* Copy error notification */}
