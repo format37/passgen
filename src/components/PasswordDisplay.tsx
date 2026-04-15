@@ -98,7 +98,7 @@ export function PasswordDisplay({
           type="button"
           onClick={onCopy}
           aria-label={isCopied ? 'Password copied' : isCopyError ? 'Copy failed' : 'Copy password'}
-          className="shrink-0 w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-accent] text-white cursor-pointer hover:bg-[--color-accent-hover] hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
+          className="btn-accent shrink-0 w-11 h-11 flex items-center justify-center rounded-lg cursor-pointer hover:scale-105 active:scale-95 transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           {isCopied ? (
             /* Check icon */

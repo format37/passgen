@@ -24,8 +24,8 @@ export const INITIAL_CONFIG: GeneratorConfig = {
   useUppercase: true,
   useLowercase: true,
   useDigits: true,
-  useSymbols: false,
-  excludeAmbiguous: false,
+  useSymbols: true,
+  excludeAmbiguous: true,
 }
 
 export const AMBIGUOUS_CHARS = new Set(['0', 'o', 'O', 'I', 'l', '1', 'i', '|', 'c', 'C'])

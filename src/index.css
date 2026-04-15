@@ -44,6 +44,7 @@
   --color-text-secondary: #475569;
   --color-text-muted: #94a3b8;
   --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
   --color-btn-bg: #e2e8f0;
   --color-btn-hover: #cbd5e1;
   --color-strength-weak: #dc2626;
@@ -132,5 +133,14 @@ input[type='range']::-moz-range-thumb {
     font-size: var(--font-size-label);
     color: var(--color-text-secondary);
     font-weight: 500;
+  }
+
+  /* Accent button — explicit var() to guarantee correct theme resolution */
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: #ffffff;
+  }
+  .btn-accent:hover {
+    background-color: var(--color-accent-hover);
   }
 }

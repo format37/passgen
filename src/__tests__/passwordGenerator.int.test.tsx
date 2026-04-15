@@ -103,14 +103,13 @@ describe('AC-01: Password generation on mount', () => {
     // - Password field is present in the DOM (not masked)
     // - Password value is non-empty
     // - Password length is exactly 16 characters
-    // - Password contains only characters from uppercase + lowercase + digits pool
-    //   (no symbols, ambiguous chars included in pool by default)
+    // - Password contains no ambiguous characters (all charsets enabled + excludeAmbiguous by default)
     // - crypto.getRandomValues was called at least once
     const passwordField = screen.getByRole('textbox', { name: /password/i })
     expect(passwordField).toBeInTheDocument()
     const value = (passwordField as HTMLInputElement).value
     expect(value).toHaveLength(16)
-    expect(value).toMatch(/^[A-Za-z0-9]+$/)
+    expect(value).not.toMatch(/[0oOIl1i|cC]/)
     expect(deterministicGetRandomValues).toHaveBeenCalled()
   })
 })
@@ -214,21 +213,21 @@ describe('AC-03/04: Length control updates password length and regenerates', () 
 // @complexity: medium
 // ---------------------------------------------------------------------------
 describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
-  it('enabling symbols toggle produces a password that may contain symbol characters', async () => {
+  it('disabling symbols toggle produces a password without symbol characters', async () => {
     // Arrange
     render(<App />)
     const symbolsToggle = screen.getByRole('checkbox', { name: 'Symbols #$&' })
-    expect(symbolsToggle).not.toBeChecked()  // default: symbols disabled
+    expect(symbolsToggle).toBeChecked()  // default: symbols enabled
 
-    // Act
+    // Act — disable symbols
     await userEvent.click(symbolsToggle)
 
     // Assert
     // Verification items:
-    // - Symbols toggle is now checked
+    // - Symbols toggle is now unchecked
     // - crypto.getRandomValues called again (regeneration)
     // - Password field is non-empty and still displays a value
-    expect(symbolsToggle).toBeChecked()
+    expect(symbolsToggle).not.toBeChecked()
     await waitFor(() => {
       const passwordField = screen.getByRole('textbox', { name: /password/i })
       expect((passwordField as HTMLInputElement).value).not.toBe('')
@@ -238,11 +237,11 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
 
   it('disabling uppercase toggle (when multiple toggles active) regenerates without uppercase chars', async () => {
     // Arrange
-    render(<App />)  // uppercase, lowercase, digits enabled
+    render(<App />)  // all charsets enabled by default
     const uppercaseToggle = screen.getByRole('checkbox', { name: 'Uppercase letters' })
 
     // Act
-    await userEvent.click(uppercaseToggle)  // disable uppercase (2 toggles remain)
+    await userEvent.click(uppercaseToggle)  // disable uppercase (remaining toggles still active)
 
     // Assert
     // Verification items:
@@ -251,7 +250,7 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
     expect(uppercaseToggle).not.toBeChecked()
     await waitFor(() => {
       const passwordField = screen.getByRole('textbox', { name: /password/i })
-      expect((passwordField as HTMLInputElement).value).toMatch(/^[a-z0-9]+$/)
+      expect((passwordField as HTMLInputElement).value).not.toMatch(/[A-Z]/)
     })
   })
 })
@@ -270,13 +269,15 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
 // ---------------------------------------------------------------------------
 describe('AC-06: Sole-active toggle cannot be unchecked', () => {
   it('clicking the only active toggle leaves it checked and does not change the password', async () => {
-    // Arrange — disable uppercase and digits to leave only lowercase
+    // Arrange — disable all except lowercase to leave it as the sole active toggle
     render(<App />)
     const uppercaseToggle = screen.getByRole('checkbox', { name: 'Uppercase letters' })
     const digitsToggle = screen.getByRole('checkbox', { name: 'Digits 123' })
+    const symbolsToggle = screen.getByRole('checkbox', { name: 'Symbols #$&' })
     const lowercaseToggle = screen.getByRole('checkbox', { name: 'Lowercase letters' })
     await userEvent.click(uppercaseToggle)  // disable
-    await userEvent.click(digitsToggle)     // disable → only lowercase remains
+    await userEvent.click(digitsToggle)     // disable
+    await userEvent.click(symbolsToggle)    // disable → only lowercase remains
 
     // Capture current password to detect (absence of) change
     const passwordBefore = (screen.getByRole('textbox', { name: /password/i }) as HTMLInputElement).value
@@ -309,20 +310,16 @@ describe('AC-06: Sole-active toggle cannot be unchecked', () => {
 // @complexity: medium
 // ---------------------------------------------------------------------------
 describe('AC-09: Ambiguous character filter removes target characters', () => {
-  it('enabling exclude-ambiguous toggle produces a password containing none of 0oOIl1i|cC', async () => {
-    // Arrange — use real crypto stub; run many passwords to assert statistical exclusion
+  it('exclude-ambiguous is enabled by default; password contains none of 0oOIl1i|cC', async () => {
+    // Arrange — render with default config (excludeAmbiguous=true)
     render(<App />)
     const ambiguousToggle = screen.getByRole('checkbox', { name: /exclude ambiguous/i })
-    expect(ambiguousToggle).not.toBeChecked()  // default off
+    expect(ambiguousToggle).toBeChecked()  // default on
 
-    // Act
-    await userEvent.click(ambiguousToggle)
-
-    // Assert
+    // Assert — initial password already excludes ambiguous characters
     // Verification items:
-    // - Ambiguous toggle is checked
-    // - Password field does not contain any of: o O I l 1 i | c C
-    expect(ambiguousToggle).toBeChecked()
+    // - Ambiguous toggle is checked by default
+    // - Password field does not contain any of: 0 o O I l 1 i | c C
     await waitFor(() => {
       const passwordField = screen.getByRole('textbox', { name: /password/i })
       const value = (passwordField as HTMLInputElement).value
