@@ -26,3 +26,4 @@ npm-debug.log*
 
 # TypeScript cache
 *.tsbuildinfo
+docker-compose.override.yml
