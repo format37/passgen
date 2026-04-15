@@ -28,7 +28,7 @@ export const INITIAL_CONFIG: GeneratorConfig = {
   excludeAmbiguous: false,
 }
 
-export const AMBIGUOUS_CHARS = new Set(['o', 'O', 'I', 'l', '1', 'i', '|', 'c', 'C'])
+export const AMBIGUOUS_CHARS = new Set(['0', 'o', 'O', 'I', 'l', '1', 'i', '|', 'c', 'C'])
 
 export const CHARSET = {
   uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',

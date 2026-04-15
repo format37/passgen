@@ -297,7 +297,7 @@ describe('AC-06: Sole-active toggle cannot be unchecked', () => {
 })
 
 // ---------------------------------------------------------------------------
-// TEST 5 — Ambiguous character filter removes oOIl1i|cC from generated passwords
+// TEST 5 — Ambiguous character filter removes 0oOIl1i|cC from generated passwords
 // ---------------------------------------------------------------------------
 // AC: AC-09 "When the toggle is enabled, no generated password contains any
 //     of the characters o, O, I, l, 1, i, |, c, C."
@@ -309,7 +309,7 @@ describe('AC-06: Sole-active toggle cannot be unchecked', () => {
 // @complexity: medium
 // ---------------------------------------------------------------------------
 describe('AC-09: Ambiguous character filter removes target characters', () => {
-  it('enabling exclude-ambiguous toggle produces a password containing none of oOIl1i|cC', async () => {
+  it('enabling exclude-ambiguous toggle produces a password containing none of 0oOIl1i|cC', async () => {
     // Arrange — use real crypto stub; run many passwords to assert statistical exclusion
     render(<App />)
     const ambiguousToggle = screen.getByRole('checkbox', { name: /exclude ambiguous/i })
@@ -326,7 +326,7 @@ describe('AC-09: Ambiguous character filter removes target characters', () => {
     await waitFor(() => {
       const passwordField = screen.getByRole('textbox', { name: /password/i })
       const value = (passwordField as HTMLInputElement).value
-      expect(value).not.toMatch(/[oOIl1i|cC]/)
+      expect(value).not.toMatch(/[0oOIl1i|cC]/)
     })
   })
 })

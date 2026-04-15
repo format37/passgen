@@ -12,7 +12,7 @@ export function AmbiguousFilter({ excludeAmbiguous, onAmbiguousChange }: Ambiguo
         onChange={(e) => onAmbiguousChange(e.target.checked)}
         className="w-4 h-4 rounded accent-[--color-accent] cursor-pointer"
       />
-      Exclude ambiguous characters (oOIl1i|cC)
+      Exclude ambiguous characters (0oOIl1i|cC)
     </label>
   )
 }
