@@ -58,7 +58,13 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
 
   // Generate password whenever config changes; bail out if crypto is unavailable
   useEffect(() => {
-    if (errorKind === 'cryptoUnavailable') return
+    if (
+      errorKind === 'cryptoUnavailable' ||
+      typeof crypto === 'undefined' ||
+      typeof crypto.getRandomValues !== 'function'
+    ) {
+      return
+    }
 
     try {
       const pool = buildPool(config)

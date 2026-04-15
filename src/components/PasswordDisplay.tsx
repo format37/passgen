@@ -60,13 +60,14 @@ export function PasswordDisplay({
       <input
         type="text"
         readOnly
+        tabIndex={0}
         value={password}
         aria-label="Generated password"
         className="password-display w-full min-h-[2.75rem] rounded-lg bg-[--color-bg-input] border border-[--color-border] px-3 py-2 text-[--color-text-primary] font-mono tracking-wider focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none"
       />
 
       {/* Strength badge */}
-      <div aria-live="polite" role="status" className="flex items-center gap-2">
+      <div aria-live="polite" aria-atomic="true" role="status" className="flex items-center gap-2">
         <span
           className={`font-semibold uppercase tracking-wider text-sm ${STRENGTH_COLOR_CLASS[strengthLabel]}`}
         >
@@ -124,6 +125,22 @@ export function PasswordDisplay({
                 <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
               </svg>
               Copied!
+            </>
+          ) : isCopyError ? (
+            <>
+              {/* X-mark icon (Heroicons outline) — signals copy failure */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+              Error
             </>
           ) : (
             <>
