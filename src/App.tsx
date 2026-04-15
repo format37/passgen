@@ -9,7 +9,8 @@ export function App() {
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
-    document.documentElement.classList.toggle('light', next === 'light')
+    document.documentElement.classList.remove('dark', 'light')
+    document.documentElement.classList.add(next)
   }
 
   return (

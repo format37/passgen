@@ -21,6 +21,8 @@ export function PasswordCard() {
       <LengthControl
         length={generator.config.length}
         onLengthChange={generator.onLengthChange}
+        onIncrement={generator.onIncrement}
+        onDecrement={generator.onDecrement}
       />
       <CharsetToggles
         config={generator.config}

@@ -1,9 +1,11 @@
 interface LengthControlProps {
   length: number
   onLengthChange: (length: number) => void
+  onIncrement: () => void
+  onDecrement: () => void
 }
 
-export function LengthControl({ length, onLengthChange }: LengthControlProps) {
+export function LengthControl({ length, onLengthChange, onIncrement, onDecrement }: LengthControlProps) {
   const isAtMin = length <= 8
   const isAtMax = length >= 64
 
@@ -16,7 +18,7 @@ export function LengthControl({ length, onLengthChange }: LengthControlProps) {
         {/* Minus button */}
         <button
           type="button"
-          onClick={() => onLengthChange(length - 1)}
+          onClick={onDecrement}
           disabled={isAtMin}
           aria-label="Decrement length"
           className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
@@ -45,7 +47,7 @@ export function LengthControl({ length, onLengthChange }: LengthControlProps) {
         {/* Plus button */}
         <button
           type="button"
-          onClick={() => onLengthChange(length + 1)}
+          onClick={onIncrement}
           disabled={isAtMax}
           aria-label="Increment length"
           className="w-11 h-11 flex items-center justify-center rounded-lg bg-[--color-btn-bg] hover:bg-[--color-btn-hover] transition-all duration-150 ease-in-out focus-visible:ring-2 focus-visible:ring-[--color-accent] focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"

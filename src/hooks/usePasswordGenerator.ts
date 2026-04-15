@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { zxcvbn } from '@zxcvbn-ts/core'
 import { buildPool, generate } from '../utils/passwordUtils'
 import {
@@ -37,6 +37,8 @@ export interface UsePasswordGeneratorReturn {
   isPlusDisabled: boolean
   isMinusDisabled: boolean
   onLengthChange: (length: number) => void
+  onIncrement: () => void
+  onDecrement: () => void
   onCharsetChange: (field: CharsetField, value: boolean) => void
   onExcludeAmbiguousChange: (value: boolean) => void
   onRegenerate: () => void
@@ -56,8 +58,11 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
     }
   }, [])
 
-  // Generate password whenever config changes; bail out if crypto is unavailable
-  useEffect(() => {
+  // Generate password whenever config changes; bail out if crypto is unavailable.
+  // useLayoutEffect ensures the password DOM value updates synchronously within
+  // the same commit phase, so Playwright (and other test tools) can read the
+  // correct value immediately after triggering a state change.
+  useLayoutEffect(() => {
     if (
       errorKind === 'cryptoUnavailable' ||
       typeof crypto === 'undefined' ||
@@ -92,6 +97,14 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
   const onLengthChange = useCallback((length: number) => {
     const clamped = Math.max(8, Math.min(64, length))
     setConfig((prev) => ({ ...prev, length: clamped }))
+  }, [])
+
+  const onIncrement = useCallback(() => {
+    setConfig((prev) => ({ ...prev, length: Math.min(64, prev.length + 1) }))
+  }, [])
+
+  const onDecrement = useCallback(() => {
+    setConfig((prev) => ({ ...prev, length: Math.max(8, prev.length - 1) }))
   }, [])
 
   const onCharsetChange = useCallback((field: CharsetField, value: boolean) => {
@@ -139,6 +152,8 @@ export function usePasswordGenerator(): UsePasswordGeneratorReturn {
     isPlusDisabled,
     isMinusDisabled,
     onLengthChange,
+    onIncrement,
+    onDecrement,
     onCharsetChange,
     onExcludeAmbiguousChange,
     onRegenerate,

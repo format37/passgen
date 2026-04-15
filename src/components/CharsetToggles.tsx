@@ -8,15 +8,16 @@ interface CharsetTogglesProps {
 type CharsetOption = {
   field: CharsetField
   label: string
+  ariaLabel: string
   checked: boolean
 }
 
 export function CharsetToggles({ config, onCharsetChange }: CharsetTogglesProps) {
   const options: CharsetOption[] = [
-    { field: 'uppercase', label: 'ABC', checked: config.useUppercase },
-    { field: 'lowercase', label: 'abc', checked: config.useLowercase },
-    { field: 'digits', label: '123', checked: config.useDigits },
-    { field: 'symbols', label: '#$&', checked: config.useSymbols },
+    { field: 'uppercase', label: 'ABC', ariaLabel: 'Uppercase letters', checked: config.useUppercase },
+    { field: 'lowercase', label: 'abc', ariaLabel: 'Lowercase letters', checked: config.useLowercase },
+    { field: 'digits', label: '123', ariaLabel: 'Digits 123', checked: config.useDigits },
+    { field: 'symbols', label: '#$&', ariaLabel: 'Symbols #$&', checked: config.useSymbols },
   ]
 
   const activeCount = options.filter((o) => o.checked).length
@@ -25,7 +26,7 @@ export function CharsetToggles({ config, onCharsetChange }: CharsetTogglesProps)
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium text-[--color-text-secondary]">Characters used:</span>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {options.map(({ field, label, checked }) => {
+        {options.map(({ field, label, ariaLabel, checked }) => {
           const isLastActive = checked && activeCount === 1
           return (
             <label
@@ -42,6 +43,7 @@ export function CharsetToggles({ config, onCharsetChange }: CharsetTogglesProps)
               <input
                 type="checkbox"
                 checked={checked}
+                aria-label={ariaLabel}
                 aria-disabled={isLastActive ? 'true' : undefined}
                 onChange={(e) => onCharsetChange(field, e.target.checked)}
                 className="w-4 h-4 rounded accent-[--color-accent] cursor-pointer"

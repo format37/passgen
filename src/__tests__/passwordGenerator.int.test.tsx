@@ -217,7 +217,7 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
   it('enabling symbols toggle produces a password that may contain symbol characters', async () => {
     // Arrange
     render(<App />)
-    const symbolsToggle = screen.getByRole('checkbox', { name: '#$&' })
+    const symbolsToggle = screen.getByRole('checkbox', { name: 'Symbols #$&' })
     expect(symbolsToggle).not.toBeChecked()  // default: symbols disabled
 
     // Act
@@ -239,7 +239,7 @@ describe('AC-05: Charset toggle changes pool and triggers regeneration', () => {
   it('disabling uppercase toggle (when multiple toggles active) regenerates without uppercase chars', async () => {
     // Arrange
     render(<App />)  // uppercase, lowercase, digits enabled
-    const uppercaseToggle = screen.getByRole('checkbox', { name: 'ABC' })
+    const uppercaseToggle = screen.getByRole('checkbox', { name: 'Uppercase letters' })
 
     // Act
     await userEvent.click(uppercaseToggle)  // disable uppercase (2 toggles remain)
@@ -272,9 +272,9 @@ describe('AC-06: Sole-active toggle cannot be unchecked', () => {
   it('clicking the only active toggle leaves it checked and does not change the password', async () => {
     // Arrange — disable uppercase and digits to leave only lowercase
     render(<App />)
-    const uppercaseToggle = screen.getByRole('checkbox', { name: 'ABC' })
-    const digitsToggle = screen.getByRole('checkbox', { name: '123' })
-    const lowercaseToggle = screen.getByRole('checkbox', { name: 'abc' })
+    const uppercaseToggle = screen.getByRole('checkbox', { name: 'Uppercase letters' })
+    const digitsToggle = screen.getByRole('checkbox', { name: 'Digits 123' })
+    const lowercaseToggle = screen.getByRole('checkbox', { name: 'Lowercase letters' })
     await userEvent.click(uppercaseToggle)  // disable
     await userEvent.click(digitsToggle)     // disable → only lowercase remains
 
@@ -376,7 +376,7 @@ describe('AC-13: Strength indicator maps zxcvbn score to correct label', () => {
     })
 
     // Act — enable symbols and increase length to 32 to change the password
-    const symbolsToggle = screen.getByRole('checkbox', { name: '#$&' })
+    const symbolsToggle = screen.getByRole('checkbox', { name: 'Symbols #$&' })
     await userEvent.click(symbolsToggle)
     const slider = screen.getByRole('slider', { name: /password length/i })
     fireEvent.change(slider, { target: { value: '32' } })
@@ -599,7 +599,7 @@ describe('AC-10: Pool-error state when effective character pool is empty', () =>
     buildPoolMock.mockImplementation(realBp)
 
     // Trigger a config change so the generation effect re-runs with the real buildPool
-    const uppercaseToggle = screen.getByRole('checkbox', { name: 'ABC' })
+    const uppercaseToggle = screen.getByRole('checkbox', { name: 'Uppercase letters' })
     await userEvent.click(uppercaseToggle)
 
     // Assert — pool-error cleared: password field restored
